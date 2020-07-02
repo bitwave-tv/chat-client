@@ -1,10 +1,10 @@
 {
   "name": "@bitwave/chat-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Basic API client for [bitwave.tv]'s chat",
   "main": "api.js",
   "scripts": {
-    "test": "echo \"Nothing to see here. Move along...\" && exit 1"
+    "test": "echo \"TODO: testing. Nothing to see here. Move along...\""
   },
   "keywords": [
     "api",
