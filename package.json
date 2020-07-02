@@ -1,0 +1,22 @@
+{
+  "name": "@bitwave/chat-client",
+  "version": "0.1.0",
+  "description": "Basic API client for [bitwave.tv]'s chat",
+  "main": "api.js",
+  "scripts": {
+    "test": "echo \"Nothing to see here. Move along...\" && exit 1"
+  },
+  "keywords": [
+    "api",
+    "websocket",
+    "socketio",
+    "bitwave",
+    "chat",
+    "client"
+  ],
+  "author": "dvdrw",
+  "license": "LGPL-3.0",
+  "dependencies": {
+    "socketio": "^1.0.0"
+  }
+}
