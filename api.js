@@ -51,6 +51,8 @@ let userProfile = {
 
 export default {
 
+    global: true,
+
     get socket() { return socket; },
     set socket( s ) { socket = s; },
 
@@ -129,7 +131,7 @@ export default {
                 'message',
                 {
                     message: msg,
-                    channel: this.userProfile.page,
+                    channel: userProfile.page,
                     global: this.global,
                     showBadge: true,
                 }
