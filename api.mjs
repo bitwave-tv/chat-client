@@ -1,5 +1,5 @@
-import $http from './httpClient.js';
-import $log  from './log.js';
+import $http from './httpClient.mjs';
+import $log  from './log.mjs';
 
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
@@ -20,8 +20,13 @@ const chatServer = 'https://chat.bitwave.tv';
  * @return JWT token as string
  */
 const getTrollToken = async () => {
-    const data = await $http.get( apiPrefix + 'troll-token' );
-    return data;
+    try {
+        const data = await $http.get( apiPrefix + 'troll-token' );
+        return data;
+    } catch ( e ) {
+        $log.error( `Couldn't get troll token!` );
+        console.error( e );
+    }
 };
 
 /**
@@ -98,9 +103,14 @@ export default {
      * @see channelViewers
      */
     async updateUsernames() {
-        const data = await $http.get( 'https://api.bitwave.tv/v1/chat/channels' );
-        if( data && data.success ) {
-            this.channelViewers = data.data;
+        try {
+            const data = await $http.get( 'https://api.bitwave.tv/v1/chat/channels' );
+            if( data && data.success ) {
+                this.channelViewers = data.data;
+            }
+        } catch ( e ) {
+            $log.error( `Couldn't update usernames!` );
+            console.error( e );
         }
     },
 
@@ -110,12 +120,18 @@ export default {
      * @see socketError()
      */
     hydrate() {
-        const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + this.room ? this.room : '' );
-        if( !data.length ) return $log.warn( 'Hydration data was empty' );
+        try {
+            const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + this.room ? this.room : '' );
+            if( !data.length ) return $log.warn( 'Hydration data was empty' );
 
-        this.rcvMessageBulk( data );
-        // Supresses warning about prev. abused return
-        return undefined;
+            this.rcvMessageBulk( data );
+            // Supresses warning about prev. abused return
+            return undefined;
+        } catch ( e ) {
+            $log.error( `Couldn't get chat hydration data!` );
+            console.error( e );
+            return undefined;
+        }
     },
 
     /**
