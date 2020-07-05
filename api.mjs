@@ -80,9 +80,6 @@ export default {
 
     global: true, /**< Global chat mode flag */
 
-    get socket() { return socket; }, /**< socketio object */
-    set socket( s ) { socket = s; },
-
     /**
      * Callback function that receives messages (in bulk)
      * @param ms Message object array

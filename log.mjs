@@ -1,15 +1,15 @@
 export default {
-    prefix: '[bitwave.tv bot] ',
+    prefix: '[bitwave.tv API] ',
 
-    info( message ) {
-        console.log( this.prefix + message );
+    info( message, ...args ) {
+        console.log( this.prefix + message, ...args );
     },
 
-    warn( message ) {
-        console.warn( this.prefix + '[WARN] ' + message );
+    warn( message, ...args ) {
+        console.warn( this.prefix + '[WARN] ' + message, ...args );
     },
 
-    error( message ) {
-        console.error( this.prefix + '[ERROR] ' + message );
+    error( message, ...args ) {
+        console.error( this.prefix + '[ERROR] ' + message, ...args );
     },
 };
