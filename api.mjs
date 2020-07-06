@@ -65,8 +65,8 @@ const socketReconnect = async hydrate => {
 /**
  * This function is called when there's a socket error.
  */
-const socketError = message => {
-    $log.error( `Socket error: ${message}` );
+const socketError = ( message, error ) => {
+    $log.error( `Socket error: ${message}`, error );
     // TODO: handle error
 };
 
@@ -118,7 +118,7 @@ export default {
      */
     hydrate() {
         try {
-            const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + this.room ? this.room : '' );
+            const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
             if( !data.length ) return $log.warn( 'Hydration data was empty' );
 
             this.rcvMessageBulk( data );
@@ -150,8 +150,8 @@ export default {
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => await socketConnect( socket ) ],
-            [ 'reconnect', async () => await socketReconnect( socket ) ],
+            [ 'connect',   async () => await socketConnect() ],
+            [ 'reconnect', async () => await socketReconnect( this.hydrate ) ],
             [ 'error', async error => await socketError( `Connection Failed`, error ) ],
             [ 'disconnect', async data  => await socketError( `Connection Lost`, data ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
