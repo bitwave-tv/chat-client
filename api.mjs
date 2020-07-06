@@ -146,12 +146,12 @@ export default {
         userProfile.page = room;
 
         const socketOptions = { transports: [ 'websocket' ] };
-        this.socket = socketio( chatServer, socketOptions );
+        socket = await socketio( chatServer, socketOptions );
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => await socketConnect( this.socket ) ],
-            [ 'reconnect', async () => await socketReconnect( this.socket ) ],
+            [ 'connect',   async () => await socketConnect( socket ) ],
+            [ 'reconnect', async () => await socketReconnect( socket ) ],
             [ 'error', async error => await socketError( `Connection Failed`, error ) ],
             [ 'disconnect', async data  => await socketError( `Connection Lost`, data ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
@@ -160,11 +160,11 @@ export default {
         ]);
 
         for( const s of sockSetup.entries() ) {
-            this.socket.on( s[0], s[1] );
+            socket.on( s[0], s[1] );
         }
 
         // TODO: yikes
-        // this.socket.on( 'pollstate', data => this.updatePoll( data ) );
+        // socket.on( 'pollstate', data => this.updatePoll( data ) );
     },
 
     get room()  { return userProfile.page; }, /**< Current room */
@@ -180,10 +180,10 @@ export default {
     sendMessage( msg ) {
         switch( typeof msg ) {
         case 'object':
-            this.socket.emit( 'message', msg );
+            socket.emit( 'message', msg );
             break;
         case 'string':
-            this.socket.emit(
+            socket.emit(
                 'message',
                 {
                     message: msg,
