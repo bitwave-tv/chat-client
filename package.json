@@ -1,6 +1,6 @@
 {
   "name": "@bitwave/chat-client",
-  "version": "0.1.4",
+  "version": "0.2.1",
   "description": "Basic API client for [bitwave.tv]'s chat",
   "repository": "github:bitwave-tv/chat-client",
   "homepage": "https://bitwave.tv",
