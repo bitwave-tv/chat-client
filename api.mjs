@@ -124,27 +124,18 @@ export default {
     /**
      * This function is called when connecting to the server
      */
-    socketConnect() {
-        socket.emit( 'new user', userProfile );
-        $log.info( `Connected to chat! (${userProfile.page})` );
-    },
+    socketConnect( self ) {},
 
     /**
      * This function is called when the server issues a reconnect.
      * It force hydrates chat to catch up.
      */
-    async socketReconnect( hydrate ) {
-        $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
-        await hydrate();
-    },
+    async socketReconnect( self ) {},
 
     /**
      * This function is called when there's a socket error.
      */
-    socketError( message, error ) {
-        $log.error( `Socket error: ${message}`, error );
-        // TODO: handle error
-    },
+    socketError( message, error, self ) {},
 
     blocked( data ) {
         $log.info( 'TODO: handle blocked event', data );
