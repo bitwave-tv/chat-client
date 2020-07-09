@@ -159,7 +159,7 @@ export default {
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentialsif falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      */
-    async init( room, credentials ) {
+    async init( room, credentials, specificServer ) {
         if( credentials && typeof credentials == 'string' ) {
             userProfile.token = credentials;
         } else {
@@ -169,7 +169,7 @@ export default {
         userProfile.page = room;
 
         const socketOptions = { transports: [ 'websocket' ] };
-        socket = await socketio( chatServer, socketOptions );
+        socket = await socketio( specificServer || chatServer, socketOptions );
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
