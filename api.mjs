@@ -158,10 +158,10 @@ export default {
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => await socketConnect() ],
-            [ 'reconnect', async () => await socketReconnect( this.hydrate ) ],
-            [ 'error', async error => await socketError( `Connection Failed`, error ) ],
-            [ 'disconnect', async data  => await socketError( `Connection Lost`, data ) ],
+            [ 'connect',   async () => await socketConnect( this ) ],
+            [ 'reconnect', async () => await socketReconnect( this ) ],
+            [ 'error', async error => await socketError( `Connection Failed`, error, this ) ],
+            [ 'disconnect', async data  => await socketError( `Connection Lost`, data, this ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
             [ 'bulkmessage', async data => await this.rcvMessageBulk( data ) ],
             [ 'alert',       async data => await this.alert( data ) ],
