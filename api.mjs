@@ -45,31 +45,6 @@ const initToken = async credentials => {
 
 let socket = null;
 
-/**
- * This function is called when connecting to the server
- */
-const socketConnect = () => {
-    socket.emit( 'new user', userProfile );
-    $log.info( `Connected to chat! (${userProfile.page})` );
-};
-
-/**
- * This function is called when the server issues a reconnect.
- * It force hydrates chat to catch up.
- */
-const socketReconnect = async hydrate => {
-    $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
-    await hydrate();
-};
-
-/**
- * This function is called when there's a socket error.
- */
-const socketError = ( message, error ) => {
-    $log.error( `Socket error: ${message}`, error );
-    // TODO: handle error
-};
-
 let userProfile = {
     recaptcha: null, // rawr XD
     page: 'global',  // room name
@@ -132,6 +107,39 @@ export default {
     },
 
     /**
+     * This function is called when connecting to the server
+     */
+    socketConnect() {
+        socket.emit( 'new user', userProfile );
+        $log.info( `Connected to chat! (${userProfile.page})` );
+    },
+
+    /**
+     * This function is called when the server issues a reconnect.
+     * It force hydrates chat to catch up.
+     */
+    async socketReconnect() {
+        $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
+        await this.hydrate();
+    },
+
+    /**
+     * This function is called when there's a socket error.
+     */
+    socketError( message, error ) {
+        $log.error( `Socket error: ${message}`, error );
+        // TODO: handle error
+    },
+
+    blocked( data ) {
+        $log.info( 'TODO: handle blocked event', data );
+    },
+
+    pollstate( data ) {
+        $log.info( 'TODO: handle pollstate event', data );
+    },
+
+    /**
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentialsif falsy, gets a new troll token. If a string, it's taken as the JWT chat token
@@ -157,20 +165,29 @@ export default {
             [ 'update usernames', async () => await this.updateUsernames() ],
             [ 'bulkmessage', async data => await this.rcvMessageBulk( data ) ],
             [ 'alert',       async data => await this.alert( data ) ],
+            [ 'blocked',     async data => await this.blocked( data ) ],
+            [ 'pollstate',   async data => await this.updatePoll( data ) ],
         ]);
 
         for( const s of sockSetup.entries() ) {
             socket.on( s[0], s[1] );
         }
-
-        // TODO: yikes
-        // socket.on( 'pollstate', data => this.updatePoll( data ) );
     },
 
     get room()  { return userProfile.page; }, /**< Current room */
     set room(r) {
         userProfile.page = r;
         $log.info( `Changed to room ${r}` );
+    },
+
+    get socket()  { return socket; }, /**< Deprecated, but allows access to underlying socket */
+    set socket(s) {
+        socket = s;
+    },
+
+    disconnect() {
+        this.socket.off();
+        this.socket.disconnect();
     },
 
     /**
