@@ -51,6 +51,21 @@ let userProfile = {
     token: null,
 };
 
+const socketConnect = () => {
+    socket.emit( 'new user', userProfile );
+    $log.info( `Connected to chat! (${userProfile.page})` );
+};
+
+const socketReconnect = async () => {
+    $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
+    await this.hydrate();
+};
+
+const socketError = ( message, error ) => {
+    $log.error( `Socket error: ${message}`, error );
+    // TODO: handle error
+};
+
 export default {
 
     global: true, /**< Global chat mode flag */
@@ -118,9 +133,9 @@ export default {
      * This function is called when the server issues a reconnect.
      * It force hydrates chat to catch up.
      */
-    async socketReconnect() {
+    async socketReconnect( hydrate ) {
         $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
-        await this.hydrate();
+        await hydrate();
     },
 
     /**
@@ -158,10 +173,22 @@ export default {
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => await socketConnect( this ) ],
-            [ 'reconnect', async () => await socketReconnect( this ) ],
-            [ 'error', async error => await socketError( `Connection Failed`, error, this ) ],
-            [ 'disconnect', async data  => await socketError( `Connection Lost`, data, this ) ],
+            [ 'connect',   async () => {
+                await socketConnect();
+                await this.socketConnect( this );
+            } ],
+            [ 'reconnect', async () => {
+                await socketReconnect( this.hydrate );
+                await this.socketReconnect( this );
+            } ],
+            [ 'error', async error => {
+                await socketError( `Connection Failed`, error);
+                await this.socketError( `Connection Failed`, error, this );
+            } ],
+            [ 'disconnect', async data  => {
+                await socketError( `Connection Lost`, data );
+                await this.socketError( `Connection Lost`, data, this );
+            } ],
             [ 'update usernames', async () => await this.updateUsernames() ],
             [ 'bulkmessage', async data => await this.rcvMessageBulk( data ) ],
             [ 'alert',       async data => await this.alert( data ) ],
