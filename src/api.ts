@@ -74,7 +74,7 @@ const socketError = ( message, error ) => {
 };
 
 let userProfile = {
-    recaptcha: null, // rawr XD
+    recaptcha: null, // rawr XD oh my
     page: 'global',  // room name
     token: null,
 };
@@ -93,7 +93,7 @@ export default {
      * Callback function that receives paid chat alert objects
      * @param message Alert object
      */
-    alert( message ) { $log.warn( `Recieved alert: ${message}` ); },
+    alert( message ) { $log.warn( `Received alert: ${message}` ); },
 
     channelViewers: [], /**< Array of channel viewers.  */
 
@@ -125,7 +125,7 @@ export default {
             if( !data.length ) return $log.warn( 'Hydration data was empty' );
 
             this.rcvMessageBulk( data );
-            // Supresses warning about prev. abused return
+            // Suppresses warning about prev. abused return
             return undefined;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );
@@ -137,7 +137,7 @@ export default {
     /**
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
-     * @param credentials User credentialsif falsy, gets a new troll token. If a string, it's taken as the JWT chat token
+     * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      */
     async init( room, credentials ) {
         if( credentials && typeof credentials == 'string' ) {
