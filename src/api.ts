@@ -1,5 +1,8 @@
-import $http from './httpClient.mjs';
-import $log  from './log.mjs';
+import $http from './httpClient';
+import logger  from './log';
+
+const $log = new logger( '[bitwave.tv API]' );
+
 
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
@@ -10,7 +13,7 @@ import $log  from './log.mjs';
 //
 // ...hence the import. :sadblob:
 //
-import socketio from 'socket.io-client';
+import * as socketio from 'socket.io-client';
 
 const apiPrefix  = 'https://api.bitwave.tv/api/';
 const chatServer = 'https://chat.bitwave.tv';
@@ -116,9 +119,9 @@ export default {
      * It is called automatically when reconnecting.
      * @see socketError()
      */
-    hydrate() {
+    async hydrate() {
         try {
-            const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
+            const data = await $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
             if( !data.length ) return $log.warn( 'Hydration data was empty' );
 
             this.rcvMessageBulk( data );
@@ -150,21 +153,21 @@ export default {
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => await socketConnect() ],
-            [ 'reconnect', async () => await socketReconnect( this.hydrate ) ],
-            [ 'error', async error => await socketError( `Connection Failed`, error ) ],
-            [ 'disconnect', async data  => await socketError( `Connection Lost`, data ) ],
+            [ 'connect',          async () => await socketConnect() ],
+            [ 'reconnect',        async () => await socketReconnect( this.hydrate ) ],
+            [ 'error',            async error => await socketError( `Connection Failed`, error ) ],
+            [ 'disconnect',       async data  => await socketError( `Connection Lost`, data ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
-            [ 'bulkmessage', async data => await this.rcvMessageBulk( data ) ],
-            [ 'alert',       async data => await this.alert( data ) ],
+            [ 'bulkmessage',      async data => await this.rcvMessageBulk( data ) ],
+            [ 'alert',            async data => await this.alert( data ) ],
         ]);
 
-        for( const s of sockSetup.entries() ) {
-            socket.on( s[0], s[1] );
-        }
+        sockSetup.forEach( (event, cb) => {
+          socket.on( event, cb );
 
-        // TODO: yikes
-        // socket.on( 'pollstate', data => this.updatePoll( data ) );
+          // TODO: yikes
+          // socket.on( 'pollstate', data => this.updatePoll( data ) );
+        });
     },
 
     get room()  { return userProfile.page; }, /**< Current room */

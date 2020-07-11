@@ -1,6 +1,6 @@
 {
   "name": "@bitwave/chat-client",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Basic API client for [bitwave.tv]'s chat",
   "repository": "github:bitwave-tv/chat-client",
   "homepage": "https://bitwave.tv",
@@ -8,6 +8,10 @@
   "license": "LGPL-3.0",
   "main": "api.mjs",
   "scripts": {
+    "dev": "nodemon build/api.js",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "node build/api.js",
     "test": "echo \"TODO: testing. Nothing to see here. Move along...\""
   },
   "keywords": [
@@ -20,5 +24,9 @@
   ],
   "dependencies": {
     "socketio": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.22",
+    "nodemon": "^2.0.4"
   }
 }
