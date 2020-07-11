@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var httpClient_1 = require("./httpClient");
 var log_1 = require("./log");
 var $log = new log_1.default('[bitwave.tv API]');
+;
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
 // as socketio docs say:
@@ -93,41 +94,36 @@ var initToken = function (credentials) { return __awaiter(void 0, void 0, void 0
 }); };
 /* ========================================= */
 var socket = null;
-/**
- * This function is called when connecting to the server
- */
-var socketConnect = function () {
-    socket.emit('new user', userProfile);
-    $log.info("Connected to chat! (" + userProfile.page + ")");
+var userProfile = {
+    recaptcha: null,
+    page: 'global',
+    token: null,
 };
-/**
- * This function is called when the server issues a reconnect.
- * It force hydrates chat to catch up.
- */
-var socketReconnect = function (hydrate) { return __awaiter(void 0, void 0, void 0, function () {
+var socketConnect = function () { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        socket.emit('new user', userProfile);
+        $log.info("Connected to chat! (" + userProfile.page + ")");
+        return [2 /*return*/];
+    });
+}); };
+var socketReconnect = function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 $log.info("Socket issued 'reconnect'. Forcing hydration...");
-                return [4 /*yield*/, hydrate()];
+                return [4 /*yield*/, this.hydrate()];
             case 1:
                 _a.sent();
                 return [2 /*return*/];
         }
     });
 }); };
-/**
- * This function is called when there's a socket error.
- */
-var socketError = function (message, error) {
-    $log.error("Socket error: " + message, error);
-    // TODO: handle error
-};
-var userProfile = {
-    recaptcha: null,
-    page: 'global',
-    token: null,
-};
+var socketError = function (message, error) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        $log.error("Socket error: " + message, error);
+        return [2 /*return*/];
+    });
+}); };
 exports.default = {
     global: true,
     /**
@@ -142,7 +138,7 @@ exports.default = {
      * Callback function that receives paid chat alert objects
      * @param message Alert object
      */
-    alert: function (message) { $log.warn("Received alert: " + message); },
+    alert: function (message) { $log.warn("Received alert: ", message); },
     channelViewers: [],
     /**
      * Gets an array of usernames from the server and puts it in channelViewers
@@ -204,11 +200,34 @@ exports.default = {
         });
     },
     /**
+     * This function is called when connecting to the server
+     */
+    socketConnect: function () { },
+    /**
+     * This function is called when the server issues a reconnect.
+     * It force hydrates chat to catch up.
+     */
+    socketReconnect: function () {
+        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
+            return [2 /*return*/];
+        }); });
+    },
+    /**
+     * This function is called when there's a socket error.
+     */
+    socketError: function (message, error) { },
+    blocked: function (data) {
+        $log.info('TODO: handle blocked event', data);
+    },
+    pollstate: function (data) {
+        $log.info('TODO: handle pollstate event', data);
+    },
+    /**
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      */
-    init: function (room, credentials) {
+    init: function (room, credentials, specificServer) {
         return __awaiter(this, void 0, void 0, function () {
             var _a, socketOptions, sockSetup;
             var _this = this;
@@ -227,28 +246,49 @@ exports.default = {
                     case 3:
                         userProfile.page = room;
                         socketOptions = { transports: ['websocket'] };
-                        return [4 /*yield*/, socketio(chatServer, socketOptions)];
+                        return [4 /*yield*/, socketio(specificServer || chatServer, socketOptions)];
                     case 4:
                         socket = _b.sent();
                         sockSetup = new Map([
-                            ['connect', function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, socketConnect()];
-                                        case 1: return [2 /*return*/, _a.sent()];
-                                    }
-                                }); }); }],
-                            ['reconnect', function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, socketReconnect(this.hydrate)];
-                                        case 1: return [2 /*return*/, _a.sent()];
-                                    }
-                                }); }); }],
-                            ['error', function (error) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, socketError("Connection Failed", error)];
-                                        case 1: return [2 /*return*/, _a.sent()];
-                                    }
-                                }); }); }],
+                            ['connect', function () { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, socketConnect()];
+                                            case 1:
+                                                _a.sent();
+                                                return [4 /*yield*/, this.socketConnect.call(this)];
+                                            case 2:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                }); }],
+                            ['reconnect', function () { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, socketReconnect.call(this)];
+                                            case 1:
+                                                _a.sent();
+                                                return [4 /*yield*/, this.socketReconnect.call(this)];
+                                            case 2:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                }); }],
+                            ['error', function (error) { return __awaiter(_this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4 /*yield*/, socketError("Connection Failed", error)];
+                                            case 1:
+                                                _a.sent();
+                                                return [4 /*yield*/, this.socketError.call(this, "Connection Failed", error)];
+                                            case 2:
+                                                _a.sent();
+                                                return [2 /*return*/];
+                                        }
+                                    });
+                                }); }],
                             ['disconnect', function (data) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0: return [4 /*yield*/, socketError("Connection Lost", data)];
@@ -276,8 +316,6 @@ exports.default = {
                         ]);
                         sockSetup.forEach(function (event, cb) {
                             socket.on(event, cb);
-                            // TODO: yikes
-                            // socket.on( 'pollstate', data => this.updatePoll( data ) );
                         });
                         return [2 /*return*/];
                 }
@@ -288,6 +326,14 @@ exports.default = {
     set room(r) {
         userProfile.page = r;
         $log.info("Changed to room " + r);
+    },
+    get socket() { return socket; },
+    set socket(s) {
+        socket = s;
+    },
+    disconnect: function () {
+        this.socket.off();
+        this.socket.disconnect();
     },
     /**
      * Sends message with current config (this.userProfile)
