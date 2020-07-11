@@ -1,5 +1,8 @@
-import $http from './httpClient.mjs';
-import $log  from './log.mjs';
+import $http from './httpClient';
+import logger  from './log';
+
+const $log = new logger( '[bitwave.tv API]' );
+
 
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
@@ -10,7 +13,7 @@ import $log  from './log.mjs';
 //
 // ...hence the import. :sadblob:
 //
-import socketio from 'socket.io-client';
+import * as socketio from 'socket.io-client';
 
 const apiPrefix  = 'https://api.bitwave.tv/api/';
 const chatServer = 'https://chat.bitwave.tv';
@@ -80,7 +83,7 @@ export default {
      * Callback function that receives paid chat alert objects
      * @param message Alert object
      */
-    alert( message ) { $log.warn( `Recieved alert: ${message}` ); },
+    alert( message ) { $log.warn( `Received alert: ${message}` ); },
 
     channelViewers: [], /**< Array of channel viewers.  */
 
@@ -106,13 +109,13 @@ export default {
      * It is called automatically when reconnecting.
      * @see socketError()
      */
-    hydrate() {
+    async hydrate() {
         try {
-            const data = $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
+            const data = await $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
             if( !data.length ) return $log.warn( 'Hydration data was empty' );
 
             this.rcvMessageBulk( data );
-            // Supresses warning about prev. abused return
+            // Suppresses warning about prev. abused return
             return undefined;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );
@@ -148,7 +151,7 @@ export default {
     /**
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
-     * @param credentials User credentialsif falsy, gets a new troll token. If a string, it's taken as the JWT chat token
+     * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      */
     async init( room, credentials, specificServer ) {
         if( credentials && typeof credentials == 'string' ) {
@@ -164,32 +167,21 @@ export default {
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
-            [ 'connect',   async () => {
-                await socketConnect();
-                await this.socketConnect( this );
-            } ],
-            [ 'reconnect', async () => {
-                await socketReconnect( this.hydrate );
-                await this.socketReconnect( this );
-            } ],
-            [ 'error', async error => {
-                await socketError( `Connection Failed`, error);
-                await this.socketError( `Connection Failed`, error, this );
-            } ],
-            [ 'disconnect', async data  => {
-                await socketError( `Connection Lost`, data );
-                await this.socketError( `Connection Lost`, data, this );
-            } ],
+            [ 'connect',          async () => await socketConnect() ],
+            [ 'reconnect',        async () => await socketReconnect( this.hydrate ) ],
+            [ 'error',            async error => await socketError( `Connection Failed`, error ) ],
+            [ 'disconnect',       async data  => await socketError( `Connection Lost`, data ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
-            [ 'bulkmessage', async data => await this.rcvMessageBulk( data ) ],
-            [ 'alert',       async data => await this.alert( data ) ],
-            [ 'blocked',     async data => await this.blocked( data ) ],
-            [ 'pollstate',   async data => await this.updatePoll( data ) ],
+            [ 'bulkmessage',      async data => await this.rcvMessageBulk( data ) ],
+            [ 'alert',            async data => await this.alert( data ) ],
         ]);
 
-        for( const s of sockSetup.entries() ) {
-            socket.on( s[0], s[1] );
-        }
+        sockSetup.forEach( (event, cb) => {
+          socket.on( event, cb );
+
+          // TODO: yikes
+          // socket.on( 'pollstate', data => this.updatePoll( data ) );
+        });
     },
 
     get room()  { return userProfile.page; }, /**< Current room */
