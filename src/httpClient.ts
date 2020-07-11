@@ -1,20 +1,30 @@
 import * as https from 'https';
 
 const $get = ( url: string, cb ): void => {
+  if (typeof process === 'object') {
+    https.get( url, resp => {
+      let data = '';
 
-  https.get( url, resp => {
-    let data = '';
+      // A chunk of data has been received.
+      resp.on( 'data', ( chunk ) => {
+        data += chunk;
+      } );
 
-    // A chunk of data has been received.
-    resp.on( 'data', ( chunk ) => {
-      data += chunk;
+      // The whole response has been received. Print out the result.
+      resp.on( 'end', () => {
+        cb( JSON.parse( data ) );
+      } );
     } );
-
-    // The whole response has been received. Print out the result.
-    resp.on( 'end', () => {
-      cb( JSON.parse( data ) );
-    } );
-  } );
+  } else {
+    const req = new XMLHttpRequest();
+    req.onreadystatechange = () => {
+      if ( req.readyState === 4 && req.status === 200 ) {
+        cb( JSON.parse( req.responseText ) );
+      }
+    };
+    req.open( "GET", url, true );
+    req.send( null );
+  }
 }
 
 export default {
