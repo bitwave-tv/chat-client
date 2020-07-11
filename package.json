@@ -6,13 +6,11 @@
   "homepage": "https://bitwave.tv",
   "author": "dvdrw",
   "license": "LGPL-3.0",
-  "main": "api.mjs",
+  "main": "build/api.mjs",
   "scripts": {
     "dev": "nodemon build/api.js",
     "build": "tsc",
     "watch": "tsc -w",
-    "start": "node build/api.js",
-    "test": "echo \"TODO: testing. Nothing to see here. Move along...\""
   },
   "keywords": [
     "api",
