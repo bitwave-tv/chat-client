@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "nodemon build/api.js",
     "build": "tsc",
-    "watch": "tsc -w",
+    "watch": "tsc -w"
   },
   "keywords": [
     "api",
