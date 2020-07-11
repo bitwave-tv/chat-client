@@ -1,20 +1,22 @@
-import * as https from 'https';
+const isNode = typeof process === 'object';
 
 const $get = ( url: string, cb ): void => {
-  if (typeof process === 'object') {
-    https.get( url, resp => {
-      let data = '';
+  if ( isNode ) {
+    import( 'https' ).then( https  => {
+      https.get( url, resp => {
+        let data = '';
 
-      // A chunk of data has been received.
-      resp.on( 'data', ( chunk ) => {
-        data += chunk;
-      } );
+        // A chunk of data has been received.
+        resp.on( 'data', ( chunk ) => {
+          data += chunk;
+        } );
 
-      // The whole response has been received. Print out the result.
-      resp.on( 'end', () => {
-        cb( JSON.parse( data ) );
+        // The whole response has been received. Print out the result.
+        resp.on( 'end', () => {
+          cb( JSON.parse( data ) );
+        } );
       } );
-    } );
+    });
   } else {
     const req = new XMLHttpRequest();
     req.onreadystatechange = () => {
@@ -22,7 +24,7 @@ const $get = ( url: string, cb ): void => {
         cb( JSON.parse( req.responseText ) );
       }
     };
-    req.open( "GET", url, true );
+    req.open( 'GET', url, true );
     req.send( null );
   }
 }
