@@ -310,7 +310,6 @@ exports.default = {
                                 }); }); }],
                         ]);
                         sockSetup.forEach(function (cb, event) {
-                            console.log(event, cb);
                             socket.on(event, cb);
                         });
                         return [2 /*return*/];

@@ -10,7 +10,8 @@ var $get = function (url, cb) {
                 resp.on('data', function (chunk) {
                     data += chunk;
                 });
-                // The whole response has been received. Print out the result.
+                // The whole response has been received.
+                // Print out the result.
                 resp.on('end', function () {
                     cb(JSON.parse(data));
                 });

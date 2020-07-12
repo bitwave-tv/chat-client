@@ -191,7 +191,6 @@ export default {
         ]);
 
         sockSetup.forEach( (cb, event) => {
-            console.log( event, cb );
             socket.on( event, cb );
         });
     },
