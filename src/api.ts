@@ -65,9 +65,9 @@ const socketConnect = () => {
     $log.info( `Connected to chat! (${userProfile.page})` );
 };
 
-const socketReconnect = async (): Promise<void> => {
+const socketReconnect = async ( hydrate: Function ): Promise<void> => {
     $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
-    await this.hydrate();
+    await hydrate();
 };
 
 const socketError = async ( message: string, error: Object ): Promise<void> => {
@@ -177,7 +177,7 @@ export default {
                 await this.socketConnect.call( this );
             } ],
             [ 'reconnect',        async () => {
-                await socketReconnect.call( this );
+                await socketReconnect( this.hydrate );
                 await this.socketReconnect.call( this );
             } ],
             [ 'error',            async (error: Object) => {
