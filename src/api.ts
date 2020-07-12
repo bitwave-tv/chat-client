@@ -60,7 +60,7 @@ let userProfile = {
     token: null,
 };
 
-const socketConnect = async (): Promise<void> => {
+const socketConnect = () => {
     socket.emit( 'new user', userProfile );
     $log.info( `Connected to chat! (${userProfile.page})` );
 };
@@ -98,7 +98,7 @@ export default {
      * It is called automatically at request from the server, but can be called manually
      * @see channelViewers
      */
-    async updateUsernames(): Promise<void> {
+    async updateUsernames() {
         try {
             const data = await $http.get( 'https://api.bitwave.tv/v1/chat/channels' );
             if( data && data.success ) {
@@ -174,7 +174,7 @@ export default {
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
             [ 'connect', async () => {
-                await socketConnect();
+                socketConnect();
                 await this.socketConnect.call( this );
             } ],
             [ 'reconnect',        async () => {
@@ -191,8 +191,9 @@ export default {
             [ 'alert',            async data => await this.alert( data ) ],
         ]);
 
-        sockSetup.forEach( (event, cb) => {
-          socket.on( event, cb );
+        sockSetup.forEach( (cb, event) => {
+            console.log( event, cb );
+            socket.on( event, cb );
         });
     },
 

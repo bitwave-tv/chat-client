@@ -99,13 +99,10 @@ var userProfile = {
     page: 'global',
     token: null,
 };
-var socketConnect = function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        socket.emit('new user', userProfile);
-        $log.info("Connected to chat! (" + userProfile.page + ")");
-        return [2 /*return*/];
-    });
-}); };
+var socketConnect = function () {
+    socket.emit('new user', userProfile);
+    $log.info("Connected to chat! (" + userProfile.page + ")");
+};
 var socketReconnect = function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -244,6 +241,7 @@ exports.default = {
                         _a.token = _b.sent();
                         _b.label = 3;
                     case 3:
+                        console.log("init in api.ts");
                         userProfile.page = room;
                         socketOptions = { transports: ['websocket'] };
                         return [4 /*yield*/, socketio(specificServer || chatServer, socketOptions)];
@@ -253,11 +251,10 @@ exports.default = {
                             ['connect', function () { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, socketConnect()];
-                                            case 1:
-                                                _a.sent();
+                                            case 0:
+                                                socketConnect();
                                                 return [4 /*yield*/, this.socketConnect.call(this)];
-                                            case 2:
+                                            case 1:
                                                 _a.sent();
                                                 return [2 /*return*/];
                                         }
@@ -314,7 +311,8 @@ exports.default = {
                                     }
                                 }); }); }],
                         ]);
-                        sockSetup.forEach(function (event, cb) {
+                        sockSetup.forEach(function (cb, event) {
+                            console.log(event, cb);
                             socket.on(event, cb);
                         });
                         return [2 /*return*/];
