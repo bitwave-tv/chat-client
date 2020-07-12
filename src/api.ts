@@ -115,18 +115,17 @@ export default {
      * It is called automatically when reconnecting.
      * @see socketError()
      */
-    async hydrate(): Promise<void> {
+    async hydrate(): Promise<boolean> {
         try {
             const data = await $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
-            if( !data.length ) return $log.warn( 'Hydration data was empty' );
+            if( !data.length ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
 
             this.rcvMessageBulk( data );
-            // Suppresses warning about prev. abused return
-            return undefined;
+            return true;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );
             console.error( e );
-            return undefined;
+            return false;
         }
     },
 

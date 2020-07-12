@@ -182,15 +182,14 @@ exports.default = {
                     case 1:
                         data = _a.sent();
                         if (!data.length)
-                            return [2 /*return*/, $log.warn('Hydration data was empty')];
+                            return [2 /*return*/, $log.warn('Hydration data was empty') === undefined && false];
                         this.rcvMessageBulk(data);
-                        // Suppresses warning about prev. abused return
-                        return [2 /*return*/, undefined];
+                        return [2 /*return*/, true];
                     case 2:
                         e_3 = _a.sent();
                         $log.error("Couldn't get chat hydration data!");
                         console.error(e_3);
-                        return [2 /*return*/, undefined];
+                        return [2 /*return*/, false];
                     case 3: return [2 /*return*/];
                 }
             });
@@ -241,7 +240,6 @@ exports.default = {
                         _a.token = _b.sent();
                         _b.label = 3;
                     case 3:
-                        console.log("init in api.ts");
                         userProfile.page = room;
                         socketOptions = { transports: ['websocket'] };
                         return [4 /*yield*/, socketio(specificServer || chatServer, socketOptions)];
