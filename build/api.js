@@ -75,6 +75,11 @@ var getTrollToken = function () { return __awaiter(void 0, void 0, void 0, funct
         }
     });
 }); };
+var userProfile = {
+    recaptcha: null,
+    page: 'global',
+    token: null,
+};
 /**
  * Uses @p credentials to get a token from the server.
  * Note: currently ignores credentials and gets a troll token.
@@ -82,23 +87,25 @@ var getTrollToken = function () { return __awaiter(void 0, void 0, void 0, funct
  * @return JWT token as string
  */
 var initToken = function (credentials) { return __awaiter(void 0, void 0, void 0, function () {
-    var data;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, getTrollToken()];
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                if (!(credentials && typeof credentials === "object")) return [3 /*break*/, 1];
+                userProfile = credentials;
+                return [3 /*break*/, 3];
             case 1:
-                data = _a.sent();
-                return [2 /*return*/, data.chatToken];
+                _a = userProfile;
+                return [4 /*yield*/, getTrollToken()];
+            case 2:
+                _a.token = _b.sent();
+                _b.label = 3;
+            case 3: return [2 /*return*/];
         }
     });
 }); };
 /* ========================================= */
 var socket = null;
-var userProfile = {
-    recaptcha: null,
-    page: 'global',
-    token: null,
-};
 var socketConnect = function () {
     socket.emit('new user', userProfile);
     $log.info("Connected to chat! (" + userProfile.page + ")");
@@ -185,7 +192,6 @@ exports.default = {
                         data = _a.sent();
                         if (!data.size)
                             return [2 /*return*/, $log.warn('Hydration data was empty') === undefined && false];
-                        console.debug(data);
                         this.rcvMessageBulk(data.data);
                         return [2 /*return*/, true];
                     case 2:
@@ -228,26 +234,24 @@ exports.default = {
      */
     init: function (room, credentials, specificServer) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, socketOptions, sockSetup;
+            var socketOptions, sockSetup;
             var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         if (!(credentials && typeof credentials == 'string')) return [3 /*break*/, 1];
                         userProfile.token = credentials;
                         return [3 /*break*/, 3];
-                    case 1:
-                        _a = userProfile;
-                        return [4 /*yield*/, initToken(credentials)];
+                    case 1: return [4 /*yield*/, initToken(credentials)];
                     case 2:
-                        _a.token = _b.sent();
-                        _b.label = 3;
+                        _a.sent();
+                        _a.label = 3;
                     case 3:
                         userProfile.page = room;
                         socketOptions = { transports: ['websocket'] };
                         return [4 /*yield*/, socketio(specificServer || chatServer, socketOptions)];
                     case 4:
-                        socket = _b.sent();
+                        socket = _a.sent();
                         sockSetup = new Map([
                             ['connect', function () { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {

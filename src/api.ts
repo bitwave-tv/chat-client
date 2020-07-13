@@ -38,6 +38,12 @@ const getTrollToken = async () => {
     }
 };
 
+let userProfile = {
+    recaptcha: null, // rawr XD
+    page: 'global',  // room name
+    token: null,
+};
+
 /**
  * Uses @p credentials to get a token from the server.
  * Note: currently ignores credentials and gets a troll token.
@@ -45,20 +51,16 @@ const getTrollToken = async () => {
  * @return JWT token as string
  */
 const initToken = async credentials => {
-    //TODO: use credentials
-    const data = await getTrollToken();
-    return data.chatToken;
+    if( credentials && typeof credentials === "object" ) {
+        userProfile = credentials;
+    } else {
+        userProfile.token = await getTrollToken();
+    }
 };
 
 /* ========================================= */
 
 let socket = null;
-
-let userProfile = {
-    recaptcha: null, // rawr XD
-    page: 'global',  // room name
-    token: null,
-};
 
 const socketConnect = () => {
     socket.emit( 'new user', userProfile );
@@ -164,7 +166,7 @@ export default {
         if( credentials && typeof credentials == 'string' ) {
             userProfile.token = credentials;
         } else {
-            userProfile.token = await initToken( credentials );
+            await initToken( credentials );
         }
 
         userProfile.page = room;
