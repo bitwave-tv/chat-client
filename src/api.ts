@@ -117,10 +117,12 @@ export default {
      */
     async hydrate(): Promise<boolean> {
         try {
-            const data = await $http.get( 'https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '' );
-            if( !data.length ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
+            const url: string = 'https://chat.bitwave.tv/v1/messages/'
+                + ( !this.global && userProfile.page ? userProfile.page : '' );
+            const data = await $http.get( url );
+            if( !data.size ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
 
-            this.rcvMessageBulk( data );
+            this.rcvMessageBulk( data.data );
             return true;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );

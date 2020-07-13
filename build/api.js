@@ -173,17 +173,20 @@ exports.default = {
      */
     hydrate: function () {
         return __awaiter(this, void 0, void 0, function () {
-            var data, e_3;
+            var url, data, e_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, httpClient_1.default.get('https://chat.bitwave.tv/v1/messages' + userProfile.page ? userProfile.page : '')];
+                        url = 'https://chat.bitwave.tv/v1/messages/'
+                            + (!this.global && userProfile.page ? userProfile.page : '');
+                        return [4 /*yield*/, httpClient_1.default.get(url)];
                     case 1:
                         data = _a.sent();
-                        if (!data.length)
+                        if (!data.size)
                             return [2 /*return*/, $log.warn('Hydration data was empty') === undefined && false];
-                        this.rcvMessageBulk(data);
+                        console.debug(data);
+                        this.rcvMessageBulk(data.data);
                         return [2 /*return*/, true];
                     case 2:
                         e_3 = _a.sent();
