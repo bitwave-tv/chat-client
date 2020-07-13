@@ -91,7 +91,7 @@ var initToken = function (credentials) { return __awaiter(void 0, void 0, void 0
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                if (!(credentials && typeof credentials === "object")) return [3 /*break*/, 1];
+                if (!(typeof credentials === "object")) return [3 /*break*/, 1];
                 userProfile = credentials;
                 return [3 /*break*/, 3];
             case 1:

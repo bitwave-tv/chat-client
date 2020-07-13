@@ -51,7 +51,7 @@ let userProfile = {
  * @return JWT token as string
  */
 const initToken = async credentials => {
-    if( credentials && typeof credentials === "object" ) {
+    if( typeof credentials === "object" ) {
         userProfile = credentials;
     } else {
         userProfile.token = await getTrollToken();
