@@ -112,6 +112,8 @@ export default {
         }
     },
 
+    onHydrate( data: Message[] ) { this.rcvMessageBulk( data ) },
+
     /**
      * Requests messages from the server (called hydration)
      * It is called automatically when reconnecting.
@@ -124,7 +126,7 @@ export default {
             const data = await $http.get( url );
             if( !data.size ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
 
-            this.rcvMessageBulk( data.data );
+            this.onHydrate( data.data );
             return true;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );
