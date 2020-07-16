@@ -163,6 +163,7 @@ export default {
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
+     * @param specificServer URI to a specific chat server
      */
     async init( room: string, credentials: string | Object, specificServer?: string ) {
         if( credentials && typeof credentials == 'string' ) {
