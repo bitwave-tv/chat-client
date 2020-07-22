@@ -1,15 +1,5 @@
 import $http from './httpClient';
-import logger  from './log';
-
-const $log = new logger( '[bitwave.tv API]' );
-
-interface Message {
-  message: string,
-  channel: string,
-  global: boolean,
-  showBadge: boolean,
-};
-
+import logger from './log';
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
 // as socketio docs say:
@@ -21,6 +11,15 @@ interface Message {
 //
 import * as socketio from 'socket.io-client';
 
+const $log = new logger( '[bitwave.tv API]' );
+
+interface Message {
+  message: string,
+  channel: string,
+  global: boolean,
+  showBadge: boolean,
+}
+
 const apiPrefix  = 'https://api.bitwave.tv/api/';
 const chatServer = 'https://chat.bitwave.tv';
 
@@ -30,8 +29,7 @@ const chatServer = 'https://chat.bitwave.tv';
  */
 const getTrollToken = async () => {
     try {
-        const data = await $http.get( apiPrefix + 'troll-token' );
-        return data;
+        return await $http.get( apiPrefix + 'troll-token' );
     } catch ( e ) {
         $log.error( `Couldn't get troll token!` );
         console.error( e );
@@ -45,8 +43,7 @@ let userProfile = {
 };
 
 /**
- * Uses @p credentials to get a token from the server.
- * Note: currently ignores credentials and gets a troll token.
+ * Uses `credentials` to get a token from the server.
  *
  * @return JWT token as string
  */
@@ -184,7 +181,7 @@ export default {
                 await this.socketConnect.call( this );
             } ],
             [ 'reconnect',        async () => {
-                await socketReconnect( this.hydrate );
+                await socketReconnect( () => this.hydrate.call( this ) );
                 await this.socketReconnect.call( this );
             } ],
             [ 'error',            async (error: Object) => {
