@@ -6,11 +6,11 @@
  */
 
 export default class {
-  public prefix: string;
+  public readonly prefix: string;
 
   /** Creates new logger */
   constructor( prefix?: string ) {
-    this.prefix = prefix ?? '[bitwave.tv API]';
+    this.prefix = (prefix ?? '[bitwave.tv API]') + ' ';
   }
 
   /** Creates logger info */
