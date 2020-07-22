@@ -36,7 +36,13 @@ const getTrollToken = async () => {
     }
 };
 
-let userProfile = {
+interface Token {
+    recaptcha: any,
+    page: string,
+    token: string
+}
+
+let userProfile: Token = {
     recaptcha: null, // rawr XD
     page: 'global',  // room name
     token: null,
@@ -47,8 +53,8 @@ let userProfile = {
  *
  * @return JWT token as string
  */
-const initToken = async credentials => {
-    if( typeof credentials === "object" ) {
+const initToken = async ( credentials?: Token ) => {
+    if( credentials ) {
         userProfile = credentials;
     } else {
         userProfile.token = await getTrollToken();
@@ -162,8 +168,8 @@ export default {
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      * @param specificServer URI to a specific chat server
      */
-    async init( room: string, credentials: string | Object, specificServer?: string ) {
-        if( credentials && typeof credentials == 'string' ) {
+    async init( room: string, credentials: string | Token, specificServer?: string ) {
+        if( typeof credentials == 'string' ) {
             userProfile.token = credentials;
         } else {
             await initToken( credentials );
