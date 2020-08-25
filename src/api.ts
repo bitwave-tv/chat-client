@@ -1,15 +1,5 @@
 import $http from './httpClient';
-import logger  from './log';
-
-const $log = new logger( '[bitwave.tv API]' );
-
-interface Message {
-  message: string,
-  channel: string,
-  global: boolean,
-  showBadge: boolean,
-};
-
+import logger from './log';
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
 // as socketio docs say:
@@ -21,6 +11,15 @@ interface Message {
 //
 import * as socketio from 'socket.io-client';
 
+const $log = new logger( '[bitwave.tv API]' );
+
+interface Message {
+  message: string,
+  channel: string,
+  global: boolean,
+  showBadge: boolean,
+}
+
 const apiPrefix  = 'https://api.bitwave.tv/api/';
 const chatServer = 'https://chat.bitwave.tv';
 
@@ -30,28 +29,32 @@ const chatServer = 'https://chat.bitwave.tv';
  */
 const getTrollToken = async () => {
     try {
-        const data = await $http.get( apiPrefix + 'troll-token' );
-        return data;
+        return await $http.get( apiPrefix + 'troll-token' );
     } catch ( e ) {
         $log.error( `Couldn't get troll token!` );
         console.error( e );
     }
 };
 
-let userProfile = {
+interface Token {
+    recaptcha: any,
+    page: string,
+    token: string
+}
+
+let userProfile: Token = {
     recaptcha: null, // rawr XD
     page: 'global',  // room name
     token: null,
 };
 
 /**
- * Uses @p credentials to get a token from the server.
- * Note: currently ignores credentials and gets a troll token.
+ * Uses `credentials` to get a token from the server.
  *
  * @return JWT token as string
  */
-const initToken = async credentials => {
-    if( typeof credentials === "object" ) {
+const initToken = async ( credentials?: Token ) => {
+    if( credentials ) {
         userProfile = credentials;
     } else {
         userProfile.token = await getTrollToken();
@@ -112,6 +115,8 @@ export default {
         }
     },
 
+    onHydrate( data: Message[] ) { this.rcvMessageBulk( data ) },
+
     /**
      * Requests messages from the server (called hydration)
      * It is called automatically when reconnecting.
@@ -124,7 +129,7 @@ export default {
             const data = await $http.get( url );
             if( !data.size ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
 
-            this.rcvMessageBulk( data.data );
+            this.onHydrate( data.data );
             return true;
         } catch ( e ) {
             $log.error( `Couldn't get chat hydration data!` );
@@ -161,9 +166,10 @@ export default {
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
+     * @param specificServer URI to a specific chat server
      */
-    async init( room: string, credentials: string | Object, specificServer?: string ) {
-        if( credentials && typeof credentials == 'string' ) {
+    async init( room: string, credentials: string | Token, specificServer?: string ) {
+        if( typeof credentials == 'string' ) {
             userProfile.token = credentials;
         } else {
             await initToken( credentials );
@@ -181,7 +187,7 @@ export default {
                 await this.socketConnect.call( this );
             } ],
             [ 'reconnect',        async () => {
-                await socketReconnect( this.hydrate );
+                await socketReconnect( () => this.hydrate.call( this ) );
                 await this.socketReconnect.call( this );
             } ],
             [ 'error',            async (error: Object) => {
@@ -211,8 +217,8 @@ export default {
     },
 
     disconnect(): void {
-        this.socket.off();
-        this.socket.disconnect();
+        this.socket?.off();
+        this.socket?.disconnect();
     },
 
     /**
