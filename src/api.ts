@@ -217,8 +217,8 @@ export default {
     },
 
     disconnect(): void {
-        this.socket.off();
-        this.socket.disconnect();
+        this.socket?.off();
+        this.socket?.disconnect();
     },
 
     /**
