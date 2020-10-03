@@ -198,6 +198,7 @@ export default {
             [ 'update usernames', async () => await this.updateUsernames() ],
             [ 'bulkmessage',      async data => await this.rcvMessageBulk( data ) ],
             [ 'alert',            async data => await this.alert( data ) ],
+            [ 'blocked',          async data => await this.blocked( data ) ],
         ]);
 
         sockSetup.forEach( (cb, event) => {
