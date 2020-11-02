@@ -13,7 +13,7 @@ import * as socketio from 'socket.io-client';
 
 const $log = new logger( '[bitwave.tv API]' );
 
-interface Message {
+export interface Message {
   message: string,
   channel: string,
   global: boolean,
@@ -31,12 +31,11 @@ const getTrollToken = async () => {
     try {
         return await $http.get( apiPrefix + 'troll-token' );
     } catch ( e ) {
-        $log.error( `Couldn't get troll token!` );
-        console.error( e );
+        $log.error( `Couldn't get troll token!`, e );
     }
 };
 
-interface Token {
+export interface Token {
     recaptcha: any,
     page: string,
     token: string
@@ -209,6 +208,11 @@ export default {
     set room(r) {
         userProfile.page = r;
         $log.info( `Changed to room ${r}` );
+    },
+
+    get doLogging()  { return $log.doOutput; }, /**< Enable log output */
+    set doLogging(r) {
+        $log.doOutput = r;
     },
 
     get socket()  { return socket; }, /**< Deprecated, but allows access to underlying socket */
