@@ -14,8 +14,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var default_1 = /** @class */ (function () {
     /** Creates new logger */
-    function default_1(prefix) {
-        this.prefix = prefix !== null && prefix !== void 0 ? prefix : '[bitwave.tv API]';
+    function default_1(prefix, doOutput) {
+        this.doOutput = true;
+        this.doOutput = doOutput;
+        this.prefix = (prefix !== null && prefix !== void 0 ? prefix : '[bitwave.tv API]') + ' ';
     }
     /** Creates logger info */
     default_1.prototype.info = function (message) {
@@ -23,7 +25,7 @@ var default_1 = /** @class */ (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             args[_i - 1] = arguments[_i];
         }
-        console.log.apply(console, __spreadArrays([this.prefix + message], args));
+        this.doOutput && console.log.apply(console, __spreadArrays([this.prefix + message], args));
     };
     /** Creates logger warn */
     default_1.prototype.warn = function (message) {
@@ -31,7 +33,7 @@ var default_1 = /** @class */ (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             args[_i - 1] = arguments[_i];
         }
-        console.warn.apply(console, __spreadArrays([this.prefix + '[WARN] ' + message], args));
+        this.doOutput && console.warn.apply(console, __spreadArrays([this.prefix + '[WARN] ' + message], args));
     };
     /** Creates logger error */
     default_1.prototype.error = function (message) {
@@ -39,7 +41,7 @@ var default_1 = /** @class */ (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             args[_i - 1] = arguments[_i];
         }
-        console.error.apply(console, __spreadArrays([this.prefix + '[ERROR] ' + message], args));
+        this.doOutput && console.error.apply(console, __spreadArrays([this.prefix + '[ERROR] ' + message], args));
     };
     return default_1;
 }());

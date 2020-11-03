@@ -36,10 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.BitwaveChat = void 0;
 var httpClient_1 = require("./httpClient");
 var log_1 = require("./log");
-var $log = new log_1.default('[bitwave.tv API]');
-;
 //
 // Despite my best attempts to stay standalone, slim (and nodejs-free),
 // as socketio docs say:
@@ -50,6 +49,7 @@ var $log = new log_1.default('[bitwave.tv API]');
 // ...hence the import. :sadblob:
 //
 var socketio = require("socket.io-client");
+var $log = new log_1.default('[bitwave.tv API]');
 var apiPrefix = 'https://api.bitwave.tv/api/';
 var chatServer = 'https://chat.bitwave.tv';
 /**
@@ -57,99 +57,79 @@ var chatServer = 'https://chat.bitwave.tv';
  * @return JWT token as string
  */
 var getTrollToken = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var data, e_1;
+    var e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
                 return [4 /*yield*/, httpClient_1.default.get(apiPrefix + 'troll-token')];
-            case 1:
-                data = _a.sent();
-                return [2 /*return*/, data];
+            case 1: return [2 /*return*/, _a.sent()];
             case 2:
                 e_1 = _a.sent();
-                $log.error("Couldn't get troll token!");
-                console.error(e_1);
+                $log.error("Couldn't get troll token!", e_1);
                 return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
-        }
-    });
-}); };
-var userProfile = {
-    recaptcha: null,
-    page: 'global',
-    token: null,
-};
-/**
- * Uses @p credentials to get a token from the server.
- * Note: currently ignores credentials and gets a troll token.
- *
- * @return JWT token as string
- */
-var initToken = function (credentials) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                if (!(typeof credentials === "object")) return [3 /*break*/, 1];
-                userProfile = credentials;
-                return [3 /*break*/, 3];
-            case 1:
-                _a = userProfile;
-                return [4 /*yield*/, getTrollToken()];
-            case 2:
-                _a.token = _b.sent();
-                _b.label = 3;
             case 3: return [2 /*return*/];
         }
     });
 }); };
 /* ========================================= */
-var socket = null;
-var socketConnect = function () {
-    socket.emit('new user', userProfile);
-    $log.info("Connected to chat! (" + userProfile.page + ")");
-};
-var socketReconnect = function (hydrate) { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                $log.info("Socket issued 'reconnect'. Forcing hydration...");
-                return [4 /*yield*/, hydrate()];
-            case 1:
-                _a.sent();
-                return [2 /*return*/];
-        }
-    });
-}); };
-var socketError = function (message, error) { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        $log.error("Socket error: " + message, error);
-        return [2 /*return*/];
-    });
-}); };
-exports.default = {
-    global: true,
+var BitwaveChat = /** @class */ (function () {
+    function BitwaveChat(doLogging) {
+        this._socket = null;
+        this.userProfile = {
+            recaptcha: null,
+            page: 'global',
+            token: null,
+        };
+        this.global = true; /**< Global chat mode flag */
+        this.channelViewers = []; /**< Array of channel viewers.  */
+        $log.doOutput = doLogging;
+    }
+    /**
+     * Uses `credentials` to get a token from the server.
+     *
+     * @return JWT token as string
+     */
+    BitwaveChat.prototype.initToken = function (credentials) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!credentials) return [3 /*break*/, 1];
+                        this.userProfile = credentials;
+                        return [3 /*break*/, 3];
+                    case 1:
+                        _a = this.userProfile;
+                        return [4 /*yield*/, getTrollToken()];
+                    case 2:
+                        _a.token = _b.sent();
+                        _b.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ;
     /**
      * Callback function that receives messages (in bulk)
      * @param ms Message object array
      */
-    rcvMessageBulk: function (ms) { for (var _i = 0, ms_1 = ms; _i < ms_1.length; _i++) {
+    BitwaveChat.prototype.rcvMessageBulk = function (ms) { for (var _i = 0, ms_1 = ms; _i < ms_1.length; _i++) {
         var m = ms_1[_i];
         console.log(m);
-    } },
+    } };
     /**
      * Callback function that receives paid chat alert objects
      * @param message Alert object
      */
-    alert: function (message) { $log.warn("Received alert: ", message); },
-    channelViewers: [],
+    BitwaveChat.prototype.alert = function (message) { $log.warn("Received alert: ", message); };
     /**
      * Gets an array of usernames from the server and puts it in channelViewers
      * It is called automatically at request from the server, but can be called manually
      * @see channelViewers
      */
-    updateUsernames: function () {
+    BitwaveChat.prototype.updateUsernames = function () {
         return __awaiter(this, void 0, void 0, function () {
             var data, e_2;
             return __generator(this, function (_a) {
@@ -172,13 +152,15 @@ exports.default = {
                 }
             });
         });
-    },
+    };
+    BitwaveChat.prototype.onHydrate = function (data) { this.rcvMessageBulk(data); };
     /**
      * Requests messages from the server (called hydration)
      * It is called automatically when reconnecting.
      * @see socketError()
+     * @return False if unsuccessful or empty
      */
-    hydrate: function () {
+    BitwaveChat.prototype.hydrate = function () {
         return __awaiter(this, void 0, void 0, function () {
             var url, data, e_3;
             return __generator(this, function (_a) {
@@ -186,13 +168,13 @@ exports.default = {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         url = 'https://chat.bitwave.tv/v1/messages/'
-                            + (!this.global && userProfile.page ? userProfile.page : '');
+                            + (!this.global && this.userProfile.page ? this.userProfile.page : '');
                         return [4 /*yield*/, httpClient_1.default.get(url)];
                     case 1:
                         data = _a.sent();
                         if (!data.size)
                             return [2 /*return*/, $log.warn('Hydration data was empty') === undefined && false];
-                        this.rcvMessageBulk(data.data);
+                        this.onHydrate(data.data);
                         return [2 /*return*/, true];
                     case 2:
                         e_3 = _a.sent();
@@ -203,61 +185,60 @@ exports.default = {
                 }
             });
         });
-    },
+    };
     /**
      * This function is called when connecting to the server
      */
-    socketConnect: function () { },
+    BitwaveChat.prototype.socketConnect = function () { };
     /**
      * This function is called when the server issues a reconnect.
      * It force hydrates chat to catch up.
      */
-    socketReconnect: function () {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
-    },
+    BitwaveChat.prototype.socketReconnect = function () { };
     /**
      * This function is called when there's a socket error.
      */
-    socketError: function (message, error) { },
-    blocked: function (data) {
+    BitwaveChat.prototype.socketError = function (message, error) { };
+    BitwaveChat.prototype.blocked = function (data) {
         $log.info('TODO: handle blocked event', data);
-    },
-    pollstate: function (data) {
+    };
+    BitwaveChat.prototype.pollstate = function (data) {
         $log.info('TODO: handle pollstate event', data);
-    },
+    };
     /**
      * Inits data and starts connection to server
      * @param room is a string for the channel you wish to connect to
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
+     * @param specificServer URI to a specific chat server
      */
-    init: function (room, credentials, specificServer) {
+    BitwaveChat.prototype.connect = function (room, credentials, specificServer) {
         return __awaiter(this, void 0, void 0, function () {
-            var socketOptions, sockSetup;
+            var socketOptions, _a, sockSetup;
             var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        if (!(credentials && typeof credentials == 'string')) return [3 /*break*/, 1];
-                        userProfile.token = credentials;
+                        if (!(typeof credentials == 'string')) return [3 /*break*/, 1];
+                        this.userProfile.token = credentials;
                         return [3 /*break*/, 3];
-                    case 1: return [4 /*yield*/, initToken(credentials)];
+                    case 1: return [4 /*yield*/, this.initToken(credentials)];
                     case 2:
-                        _a.sent();
-                        _a.label = 3;
+                        _b.sent();
+                        _b.label = 3;
                     case 3:
-                        userProfile.page = room;
+                        this.userProfile.page = room;
                         socketOptions = { transports: ['websocket'] };
+                        _a = this;
                         return [4 /*yield*/, socketio(specificServer || chatServer, socketOptions)];
                     case 4:
-                        socket = _a.sent();
+                        _a._socket = _b.sent();
                         sockSetup = new Map([
                             ['connect', function () { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
-                                                socketConnect();
+                                                this._socket.emit('new user', this.userProfile);
+                                                $log.info("Connected to chat! (" + this.userProfile.page + ")");
                                                 return [4 /*yield*/, this.socketConnect.call(this)];
                                             case 1:
                                                 _a.sent();
@@ -268,7 +249,9 @@ exports.default = {
                             ['reconnect', function () { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, socketReconnect(this.hydrate)];
+                                            case 0:
+                                                $log.info("Socket issued 'reconnect'. Forcing hydration...");
+                                                return [4 /*yield*/, this.hydrate()];
                                             case 1:
                                                 _a.sent();
                                                 return [4 /*yield*/, this.socketReconnect.call(this)];
@@ -281,11 +264,11 @@ exports.default = {
                             ['error', function (error) { return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, socketError("Connection Failed", error)];
-                                            case 1:
-                                                _a.sent();
+                                            case 0:
+                                                // TODO: handle error
+                                                $log.error("Socket error: Connection Failed", error);
                                                 return [4 /*yield*/, this.socketError.call(this, "Connection Failed", error)];
-                                            case 2:
+                                            case 1:
                                                 _a.sent();
                                                 return [2 /*return*/];
                                         }
@@ -293,7 +276,7 @@ exports.default = {
                                 }); }],
                             ['disconnect', function (data) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4 /*yield*/, socketError("Connection Lost", data)];
+                                        case 0: return [4 /*yield*/, $log.error("Socket error: Connection Lost", data)];
                                         case 1: return [2 /*return*/, _a.sent()];
                                     }
                                 }); }); }],
@@ -317,44 +300,63 @@ exports.default = {
                                 }); }); }],
                         ]);
                         sockSetup.forEach(function (cb, event) {
-                            socket.on(event, cb);
+                            _this._socket.on(event, cb);
                         });
                         return [2 /*return*/];
                 }
             });
         });
-    },
-    get room() { return userProfile.page; },
-    set room(r) {
-        userProfile.page = r;
-        $log.info("Changed to room " + r);
-    },
-    get socket() { return socket; },
-    set socket(s) {
-        socket = s;
-    },
-    disconnect: function () {
-        this.socket.off();
-        this.socket.disconnect();
-    },
+    };
+    Object.defineProperty(BitwaveChat.prototype, "room", {
+        get: function () { return this.userProfile.page; } /**< Current room */,
+        set: function (r) {
+            this.userProfile.page = r;
+            $log.info("Changed to room " + r);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(BitwaveChat.prototype, "doLogging", {
+        get: function () { return $log.doOutput; } /**< Enable log output */,
+        set: function (r) {
+            $log.doOutput = r;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(BitwaveChat.prototype, "socket", {
+        get: function () { return this._socket; } /**< Deprecated, but allows access to underlying socket */,
+        set: function (s) {
+            this._socket = s;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    BitwaveChat.prototype.disconnect = function () {
+        var _a, _b;
+        (_a = this.socket) === null || _a === void 0 ? void 0 : _a.off();
+        (_b = this.socket) === null || _b === void 0 ? void 0 : _b.disconnect();
+    };
     /**
      * Sends message with current config (this.userProfile)
      * @param msg Message to be sent. Can be an object: { message, channel, global, showBadge }, or just a string (in which case channel/global use current values)
      */
-    sendMessage: function (msg) {
+    BitwaveChat.prototype.sendMessage = function (msg) {
         switch (typeof msg) {
             case 'object':
-                socket.emit('message', msg);
+                this._socket.emit('message', msg);
                 break;
             case 'string':
-                socket.emit('message', {
+                this._socket.emit('message', {
                     message: msg,
-                    channel: userProfile.page,
+                    channel: this.userProfile.page,
                     global: this.global,
                     showBadge: true,
                 });
                 break;
         }
-    },
-};
+    };
+    return BitwaveChat;
+}());
+exports.BitwaveChat = BitwaveChat;
 //# sourceMappingURL=api.js.map

@@ -6,9 +6,10 @@
   "homepage": "https://bitwave.tv",
   "author": "dvdrw",
   "license": "LGPL-3.0",
-  "main": "build/api.js",
+  "main": "build/index.js",
+  "types": "build/index.d.js",
   "scripts": {
-    "dev": "nodemon build/api.js",
+    "dev": "nodemon build/index.js",
     "build": "tsc",
     "watch": "tsc -w"
   },

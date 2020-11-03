@@ -14,10 +14,17 @@ import * as socketio from 'socket.io-client';
 const $log = new logger( '[bitwave.tv API]' );
 
 export interface Message {
-  message: string,
-  channel: string,
-  global: boolean,
-  showBadge: boolean,
+    avatar: string,
+    badge: string,
+    userColor: string,
+    message: string,
+    timestamp: number,
+    username: string,
+    channel: string,
+    global: boolean,
+    showBadge?: boolean,
+    type: string,
+    id: string,
 }
 
 const apiPrefix  = 'https://api.bitwave.tv/api/';
@@ -41,68 +48,54 @@ export interface Token {
     token: string
 }
 
-let userProfile: Token = {
-    recaptcha: null, // rawr XD
-    page: 'global',  // room name
-    token: null,
-};
-
-/**
- * Uses `credentials` to get a token from the server.
- *
- * @return JWT token as string
- */
-const initToken = async ( credentials?: Token ) => {
-    if( credentials ) {
-        userProfile = credentials;
-    } else {
-        userProfile.token = await getTrollToken();
-    }
-};
-
 /* ========================================= */
 
-let socket = null;
 
-const socketConnect = () => {
-    socket.emit( 'new user', userProfile );
-    $log.info( `Connected to chat! (${userProfile.page})` );
-};
+export class BitwaveChat {
 
-const socketReconnect = async ( hydrate: Function ): Promise<void> => {
-    $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
-    await hydrate();
-};
+    private _socket = null;
 
-const socketError = async ( message: string, error: Object ): Promise<void> => {
-    $log.error( `Socket error: ${message}`, error );
-    // TODO: handle error
-};
+    private userProfile: Token = {
+        recaptcha: null, // rawr XD
+        page: 'global',  // room name
+        token: null,
+    };
 
-export default {
+    /**
+     * Uses `credentials` to get a token from the server.
+     *
+     * @return JWT token as string
+     */
+    private async initToken(credentials: Token | void) {
+        if( credentials ) {
+            this.userProfile = credentials;
+        } else {
+            this.userProfile.token = await getTrollToken();
+        }
+    };
 
-    global: true, /**< Global chat mode flag */
+    public global: boolean | any = true; /**< Global chat mode flag */
 
     /**
      * Callback function that receives messages (in bulk)
      * @param ms Message object array
      */
-  rcvMessageBulk: ( ms: Message[] ): void => { for( const m of ms ) console.log( m ); },
+    public rcvMessageBulk( ms: Message[] ): void { for( const m of ms ) console.log( m ); }
 
     /**
      * Callback function that receives paid chat alert objects
      * @param message Alert object
      */
-    alert( message: Object ): void { $log.warn( `Received alert: `, message ); },
+    public alert( message: Object ): void { $log.warn( `Received alert: `, message ); }
 
-    channelViewers: [], /**< Array of channel viewers.  */
+    public channelViewers = []; /**< Array of channel viewers.  */
 
     /**
      * Gets an array of usernames from the server and puts it in channelViewers
      * It is called automatically at request from the server, but can be called manually
      * @see channelViewers
      */
-    async updateUsernames() {
+    public async updateUsernames(): Promise<void> {
         try {
             const data = await $http.get( 'https://api.bitwave.tv/v1/chat/channels' );
             if( data && data.success ) {
@@ -112,19 +105,20 @@ export default {
             $log.error( `Couldn't update usernames!` );
             console.error( e );
         }
-    },
+    }
 
-    onHydrate( data: Message[] ) { this.rcvMessageBulk( data ) },
+    public onHydrate( data: Message[] ) { this.rcvMessageBulk( data ) }
 
     /**
      * Requests messages from the server (called hydration)
      * It is called automatically when reconnecting.
      * @see socketError()
+     * @return False if unsuccessful or empty
      */
-    async hydrate(): Promise<boolean> {
+    public async hydrate(): Promise<boolean> {
         try {
             const url: string = 'https://chat.bitwave.tv/v1/messages/'
-                + ( !this.global && userProfile.page ? userProfile.page : '' );
+                + ( !this.global && this.userProfile.page ? this.userProfile.page : '' );
             const data = await $http.get( url );
             if( !data.size ) return $log.warn( 'Hydration data was empty' ) === undefined && false;
 
@@ -135,31 +129,35 @@ export default {
             console.error( e );
             return false;
         }
-    },
+    }
 
     /**
      * This function is called when connecting to the server
      */
-    socketConnect()  {},
+    public socketConnect()  {}
 
     /**
      * This function is called when the server issues a reconnect.
      * It force hydrates chat to catch up.
      */
-    async socketReconnect() {},
+    public socketReconnect() {}
 
     /**
      * This function is called when there's a socket error.
      */
-    socketError( message: string, error )  {},
+    public socketError( message: string, error )  {}
 
-    blocked( data ) {
+    public blocked( data ) {
         $log.info( 'TODO: handle blocked event', data );
-    },
+    }
 
-    pollstate( data ) {
+    public pollstate( data ) {
         $log.info( 'TODO: handle pollstate event', data );
-    },
+    }
+
+    public constructor(doLogging?: boolean) {
+        $log.doOutput = doLogging;
+    }
 
     /**
      * Inits data and starts connection to server
@@ -167,63 +165,66 @@ export default {
      * @param credentials User credentials if falsy, gets a new troll token. If a string, it's taken as the JWT chat token
      * @param specificServer URI to a specific chat server
      */
-    async init( room: string, credentials: string | Token, specificServer?: string ) {
+    async connect( room: string, credentials: string | Token | void, specificServer?: string ) {
         if( typeof credentials == 'string' ) {
-            userProfile.token = credentials;
+            this.userProfile.token = credentials;
         } else {
-            await initToken( credentials );
+            await this.initToken( credentials );
         }
 
-        userProfile.page = room;
+        this.userProfile.page = room;
 
         const socketOptions = { transports: [ 'websocket' ] };
-        socket = await socketio( specificServer || chatServer, socketOptions );
+        this._socket = await socketio( specificServer || chatServer, socketOptions );
 
         // nicked from bitwave-tv/bitwave with care; <3
         const sockSetup = new Map([
             [ 'connect', async () => {
-                socketConnect();
+                this._socket.emit( 'new user', this.userProfile );
+                $log.info( `Connected to chat! (${this.userProfile.page})` );
                 await this.socketConnect.call( this );
             } ],
             [ 'reconnect',        async () => {
-                await socketReconnect( () => this.hydrate.call( this ) );
+                $log.info( "Socket issued 'reconnect'. Forcing hydration..." );
+                await this.hydrate();
                 await this.socketReconnect.call( this );
             } ],
             [ 'error',            async (error: Object) => {
-                await socketError( `Connection Failed`, error );
+                // TODO: handle error
+                $log.error( `Socket error: Connection Failed`, error );
                 await this.socketError.call( this, `Connection Failed`, error );
             } ],
-            [ 'disconnect',       async (data: Object)  => await socketError( `Connection Lost`, data ) ],
+            [ 'disconnect',       async (data: Object)  => await $log.error( `Socket error: Connection Lost`, data ) ],
             [ 'update usernames', async () => await this.updateUsernames() ],
-            [ 'bulkmessage',      async data => await this.rcvMessageBulk( data ) ],
+            [ 'bulkmessage',      async (data: Message[]) => await this.rcvMessageBulk( data ) ],
             [ 'alert',            async data => await this.alert( data ) ],
         ]);
 
         sockSetup.forEach( (cb, event) => {
-            socket.on( event, cb );
+            this._socket.on( event, cb );
         });
-    },
+    }
 
-    get room()  { return userProfile.page; }, /**< Current room */
+    get room()  { return this.userProfile.page; } /**< Current room */
     set room(r) {
-        userProfile.page = r;
+        this.userProfile.page = r;
         $log.info( `Changed to room ${r}` );
-    },
+    }
 
-    get doLogging()  { return $log.doOutput; }, /**< Enable log output */
+    get doLogging()  { return $log.doOutput; } /**< Enable log output */
     set doLogging(r) {
         $log.doOutput = r;
-    },
+    }
 
-    get socket()  { return socket; }, /**< Deprecated, but allows access to underlying socket */
+    get socket()  { return this._socket; } /**< Deprecated, but allows access to underlying socket */
     set socket(s) {
-        socket = s;
-    },
+        this._socket = s;
+    }
 
     disconnect(): void {
         this.socket?.off();
         this.socket?.disconnect();
-    },
+    }
 
     /**
      * Sends message with current config (this.userProfile)
@@ -232,19 +233,19 @@ export default {
     sendMessage( msg: Message | string ): void {
         switch( typeof msg ) {
         case 'object':
-            socket.emit( 'message', msg );
+            this._socket.emit( 'message', msg );
             break;
         case 'string':
-            socket.emit(
+            this._socket.emit(
                 'message',
                 {
                     message: msg,
-                    channel: userProfile.page,
+                    channel: this.userProfile.page,
                     global: this.global,
                     showBadge: true,
                 }
             );
             break;
         }
-    },
-};
+    }
+}
