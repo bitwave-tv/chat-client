@@ -22,9 +22,15 @@ export interface Message {
     username: string,
     channel: string,
     global: boolean,
-    showBadge?: boolean,
     type: string,
     id: string,
+}
+
+export interface OutgoingMessage {
+    message: string,
+    channel: string,
+    global: boolean,
+    showBadge: boolean,
 }
 
 const apiPrefix  = 'https://api.bitwave.tv/api/';
@@ -230,7 +236,7 @@ export class BitwaveChat {
      * Sends message with current config (this.userProfile)
      * @param msg Message to be sent. Can be an object: { message, channel, global, showBadge }, or just a string (in which case channel/global use current values)
      */
-    sendMessage( msg: Message | string ): void {
+    sendMessage( msg: OutgoingMessage | string ): void {
         switch( typeof msg ) {
         case 'object':
             this._socket.emit( 'message', msg );
