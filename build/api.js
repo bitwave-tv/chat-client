@@ -52,6 +52,7 @@ var socketio = require("socket.io-client");
 var $log = new log_1.default('[bitwave.tv API]');
 var apiPrefix = 'https://api.bitwave.tv/api/';
 var chatServer = 'https://chat.bitwave.tv';
+var whisperEndpoint = ['api.bitwave.tv', '/v1/whispers/send'];
 /**
  * Gets a new troll token from the API server.
  * @return JWT token as string
@@ -355,6 +356,22 @@ var BitwaveChat = /** @class */ (function () {
                 });
                 break;
         }
+    };
+    BitwaveChat.prototype.sendWhisper = function (recipient, msg) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, httpClient_1.default.post(whisperEndpoint[0], whisperEndpoint[1], {
+                            chatToken: this.userProfile.token,
+                            receiver: recipient,
+                            message: msg,
+                        })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     return BitwaveChat;
 }());

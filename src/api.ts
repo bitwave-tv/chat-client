@@ -35,6 +35,7 @@ export interface OutgoingMessage {
 
 const apiPrefix  = 'https://api.bitwave.tv/api/';
 const chatServer = 'https://chat.bitwave.tv';
+const whisperEndpoint: [string, string] = ['api.bitwave.tv', '/v1/whispers/send'];
 
 /**
  * Gets a new troll token from the API server.
@@ -253,5 +254,13 @@ export class BitwaveChat {
             );
             break;
         }
+    }
+
+    async sendWhisper( recipient: string, msg: string ): Promise<void> {
+        await $http.post(whisperEndpoint[0], whisperEndpoint[1], {
+            chatToken: this.userProfile.token,
+            receiver: recipient,
+            message: msg,
+        });
     }
 }
